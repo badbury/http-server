@@ -25,10 +25,10 @@ class GetUsersHttpRequest implements GetUsersRequest {
   }
 
   present(users: GetUsersResponse) {
-    this.ctx.body = JSON.stringify({
+    this.ctx.body = {
       count: users.length,
       data: users,
-    });
+    };
   }
 }
 
@@ -93,7 +93,7 @@ class HttpServer {
       if (request.present) {
         return request.present(response);
       }
-      ctx.body = JSON.stringify(response);
+      ctx.body = response;
     });
   }
 }
