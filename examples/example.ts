@@ -13,8 +13,8 @@ type GetUsersRequest = Parameters<GetUsers['handle']>[0];
 type GetUsersResponse = ReturnType<GetUsers['handle']>;
 
 // HTTP Adapter
-class GetUsersHttpRoute extends HttpRoute<GetUsers, 'handle'> {
-  method = 'get';
+class GetUsersHttpRoute implements HttpRoute<GetUsers, 'handle'> {
+  method = 'post';
   route = '/users';
   handler = handler(GetUsers, 'handle');
 

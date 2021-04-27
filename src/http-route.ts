@@ -14,6 +14,14 @@ export function handler<
   return new Handler(type, method);
 }
 
+export interface HttpRoute<
+  T extends { [X in P]: (...args: any[]) => unknown } = any,
+  P extends keyof T = any
+> {
+  present?(ctx: Context, response: ReturnType<T[P]>): void;
+  error?(ctx: Context, error: Error): void;
+}
+
 export abstract class HttpRoute<
   T extends { [X in P]: (...args: any[]) => unknown } = any,
   P extends keyof T = any
@@ -22,6 +30,4 @@ export abstract class HttpRoute<
   abstract route: string;
   abstract handler: Handler<T, P>;
   abstract prepare(ctx: Context): Parameters<T[P]>[0];
-  abstract present(ctx: Context, response: ReturnType<T[P]>): void;
-  abstract error(ctx: Context, error: Error): void;
 }

@@ -1,6 +1,7 @@
-import Koa from 'koa';
+import Koa, { Middleware } from 'koa';
 import Router from 'koa-tree-router';
 import { HttpRoute } from './http-route';
+import bodyParser from 'koa-bodyparser';
 
 class Resolver {
   get<T extends { prototype: any }>(type: T): T['prototype'] {
@@ -15,19 +16,19 @@ export class HttpServer {
     const app = new Koa();
     const router = new Router();
     for (const route of this.routes) {
-      this.registerRoute(router, route);
+      router.on(route.method.toUpperCase(), route.route, this.buildHandler(route));
     }
 
+    app.use(bodyParser());
     app.use(router.routes());
 
     return new Promise((resolve) => app.listen(port, resolve as () => void));
   }
 
-  registerRoute<T extends { [X in P]: (...args: any[]) => unknown }, P extends keyof T>(
-    router: Router,
+  buildHandler<T extends { [X in P]: (...args: any[]) => unknown }, P extends keyof T>(
     route: HttpRoute<T, P>,
-  ): void {
-    router.on(route.method.toUpperCase(), route.route, (ctx) => {
+  ): Middleware {
+    return (ctx) => {
       const request = route.prepare(ctx);
       const handler = this.resolver.get(route.handler.type);
       try {
@@ -35,12 +36,17 @@ export class HttpServer {
         if (route.present) {
           return route.present(ctx, response);
         }
+        ctx.body = response;
       } catch (error) {
         if (typeof error === 'string') {
           error = new Error(error);
         }
-        route.error(ctx, error);
+        if (route.error) {
+          return route.error(ctx, error);
+        }
+        ctx.status = 500;
+        ctx.body = 'Something went wrong';
       }
-    });
+    };
   }
 }
