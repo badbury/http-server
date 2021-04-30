@@ -10,7 +10,14 @@ class Resolver {
 }
 
 export class HttpServer {
-  constructor(private routes: HttpRoute<any, any>[], private resolver: Resolver = new Resolver()) {}
+  private routes: HttpRoute<any, any>[] = [];
+
+  constructor(private resolver: Resolver = new Resolver()) {}
+
+  use(route: HttpRoute<any, any>): HttpServer {
+    this.routes.push(route);
+    return this;
+  }
 
   async serve(port: number): Promise<undefined> {
     const app = new Koa();

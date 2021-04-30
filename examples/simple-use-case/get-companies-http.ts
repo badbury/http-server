@@ -1,11 +1,11 @@
 import { Context } from 'koa';
 import { handler, HttpRoute } from '../../src';
-import { GetUsers } from './use-case';
+import { GetCompanies } from './get-companies';
 
-export class GetUsersHttpRoute extends HttpRoute<GetUsers, 'handle'> {
+export class GetCompaniesHttpRoute extends HttpRoute<GetCompanies, 'handle'> {
   method = 'post';
-  route = '/users';
-  handler = handler(GetUsers, 'handle');
+  route = '/companies';
+  handler = handler(GetCompanies, 'handle');
 
   prepare(ctx: Context): { limit: number } {
     return {
@@ -13,10 +13,10 @@ export class GetUsersHttpRoute extends HttpRoute<GetUsers, 'handle'> {
     };
   }
 
-  present(ctx: Context, users: { name: string }[]): void {
+  present(ctx: Context, companies: { name: string }[]): void {
     ctx.body = {
-      count: users.length,
-      data: users,
+      count: companies.length,
+      data: companies,
     };
   }
 

@@ -37,6 +37,7 @@ class GetUsersHttpRoute implements HttpRoute<GetUsers, 'handle'> {
   }
 }
 
-const server = new HttpServer([new GetUsersHttpRoute()]);
+const server = new HttpServer();
+server.use(new GetUsersHttpRoute());
 
 server.serve(8080);

@@ -1,6 +1,6 @@
 import { Context } from 'koa';
 import { handler, HttpRoute } from '../../src';
-import { GetUsers, GetUsersRequest, GetUsersResponse } from './use-case';
+import { GetUsers, GetUsersRequest, GetUsersResponse } from './get-users';
 
 export class GetUsersHttpRoute extends HttpRoute<GetUsers, 'handle'> {
   method = 'post';
