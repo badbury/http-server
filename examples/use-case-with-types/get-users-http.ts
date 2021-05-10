@@ -1,11 +1,10 @@
 import { Context } from 'koa';
-import { handler, HttpRoute } from '../../src';
+import { HttpRouteFor } from '../../src';
 import { GetUsers, GetUsersRequest, GetUsersResponse } from './get-users';
 
-export class GetUsersHttpRoute extends HttpRoute<GetUsers, 'handle'> {
-  method = 'post';
+export class GetUsersHttpRoute extends HttpRouteFor<GetUsers, 'handle'> {
+  method = 'get';
   route = '/users';
-  handler = handler(GetUsers, 'handle');
 
   prepare(ctx: Context): GetUsersRequest {
     return {

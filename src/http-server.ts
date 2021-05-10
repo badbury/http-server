@@ -3,27 +3,22 @@ import Router from 'koa-tree-router';
 import { HttpRoute } from './http-route';
 import bodyParser from 'koa-bodyparser';
 
-class Resolver {
-  get<T extends { prototype: any }>(type: T): T['prototype'] {
-    return new (type as any)();
-  }
-}
+type HttpRouteHandler<I, O> = (arg: I) => O | Promise<O>;
+type HttpRoutePair<I, O> = { route: HttpRoute<I, O>; handler: HttpRouteHandler<I, O> };
 
 export class HttpServer {
-  private routes: HttpRoute<any, any>[] = [];
+  protected routes: HttpRoutePair<any, any>[] = [];
 
-  constructor(private resolver: Resolver = new Resolver()) {}
-
-  use(route: HttpRoute<any, any>): HttpServer {
-    this.routes.push(route);
+  use<I, O>(route: HttpRoute<I, O>, handler: HttpRouteHandler<I, O>): HttpServer {
+    this.routes.push({ route, handler });
     return this;
   }
 
   async serve(port: number): Promise<undefined> {
     const app = new Koa();
     const router = new Router();
-    for (const route of this.routes) {
-      router.on(route.method.toUpperCase(), route.route, this.buildHandler(route));
+    for (const { route, handler } of this.routes) {
+      router.on(route.method.toUpperCase(), route.route, this.buildHandler(route, handler));
     }
 
     app.use(bodyParser());
@@ -32,14 +27,11 @@ export class HttpServer {
     return new Promise((resolve) => app.listen(port, resolve as () => void));
   }
 
-  buildHandler<T extends { [X in P]: (...args: any[]) => unknown }, P extends keyof T>(
-    route: HttpRoute<T, P>,
-  ): Middleware {
-    return (ctx) => {
-      const request = route.prepare(ctx);
-      const handler = this.resolver.get(route.handler.type);
+  buildHandler<I, O>(route: HttpRoute<I, O>, handler: HttpRouteHandler<I, O>): Middleware {
+    return async (ctx) => {
+      const request = await route.prepare(ctx);
       try {
-        const response = handler[route.handler.method](request);
+        const response = await handler(request);
         if (route.present) {
           return route.present(ctx, response);
         }
@@ -57,3 +49,45 @@ export class HttpServer {
     };
   }
 }
+
+// class Resolver {
+//   get<T extends { prototype: any }>(type: T): T['prototype'] {
+//     return new (type as any)();
+//   }
+// }
+
+// type Constructor = new (...args: any[]) => any;
+
+// type MethodOf<
+//   TClassType extends Constructor,
+//   TSubjectType extends Constructor,
+//   TClass = InstanceType<TClassType>,
+//   TSubject = InstanceType<TSubjectType>
+// > = {
+//   [TProperty in keyof TClass]: TClass[TProperty] extends (arg: infer U, ...extras: infer E) => any
+//     ? U extends TSubject
+//       ? TProperty
+//       : never
+//     : never;
+// }[keyof TClass];
+
+// export class HttpServerWithContainer extends HttpServer {
+//   constructor(private readonly resolver: Resolver = new Resolver()) {
+//     super();
+//   }
+
+//   useClass<I, O, P extends string, T extends MethodOf<>>(
+//     route: { prototype: HttpRoute<I, O> },
+//     handler: T,
+//     method: P,
+//   ): HttpServerWithContainer {
+//     this.routes.push({
+//       route: this.resolver.get(route),
+//       handler: (arg: I): O | Promise<O> => {
+//         const subject = this.resolver.get(handler as any);
+//         return subject[method](arg);
+//       },
+//     });
+//     return this;
+//   }
+// }

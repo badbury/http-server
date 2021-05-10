@@ -1,33 +1,36 @@
 import { Context } from 'koa';
-import { HttpRoute, HttpServer, handler } from '../src';
+import { HttpRoute, HttpServer } from '../src';
+import { GetCompanies } from './simple-use-case/get-companies';
+import { GetCompaniesHttpRoute } from './simple-use-case/get-companies-http';
+import { GetUsers } from './use-case-with-types/get-users';
+import { GetUsersHttpRoute } from './use-case-with-types/get-users-http';
 
 // Domain
-class GetUsers {
-  handle(request: { limit: number }): { name: string }[] {
+class GetPosts {
+  handle(request: { limit: number }): { title: string }[] {
     if (request.limit > 200) throw new Error('Too big');
-    return [{ name: 'Steve' }].slice(0, request.limit);
+    return [{ title: 'Do things' }].slice(0, request.limit);
   }
 }
 
-type GetUsersRequest = Parameters<GetUsers['handle']>[0];
-type GetUsersResponse = ReturnType<GetUsers['handle']>;
+type GetPostsRequest = Parameters<GetPosts['handle']>[0];
+type GetPostsResponse = ReturnType<GetPosts['handle']>;
 
 // HTTP Adapter
-class GetUsersHttpRoute implements HttpRoute<GetUsers, 'handle'> {
-  method = 'post';
-  route = '/users';
-  handler = handler(GetUsers, 'handle');
+class GetPostsHttpRoute implements HttpRoute<GetPostsRequest, GetPostsResponse> {
+  method = 'get';
+  route = '/posts';
 
-  prepare(ctx: Context): GetUsersRequest {
+  prepare(ctx: Context): GetPostsRequest {
     return {
       limit: Number(ctx.query.limit),
     };
   }
 
-  present(ctx: Context, users: GetUsersResponse) {
+  present(ctx: Context, posts: GetPostsResponse) {
     ctx.body = {
-      count: users.length,
-      data: users,
+      count: posts.length,
+      data: posts,
     };
   }
 
@@ -38,6 +41,11 @@ class GetUsersHttpRoute implements HttpRoute<GetUsers, 'handle'> {
 }
 
 const server = new HttpServer();
-server.use(new GetUsersHttpRoute());
 
+server.use(new GetPostsHttpRoute(), (...args) => new GetPosts().handle(...args));
+server.use(new GetUsersHttpRoute(), (...args) => new GetUsers().handle(...args));
+server.use(new GetCompaniesHttpRoute(), (...args) => new GetCompanies().handle(...args));
+
+// const containerServer = new HttpServerWithContainer();
+// containerServer.useClass(GetUsersHttpRoute, GetUsers, 'handle');
 server.serve(8080);

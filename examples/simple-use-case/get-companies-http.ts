@@ -1,11 +1,9 @@
 import { Context } from 'koa';
-import { handler, HttpRoute } from '../../src';
-import { GetCompanies } from './get-companies';
+import { HttpRoute } from '../../src';
 
-export class GetCompaniesHttpRoute extends HttpRoute<GetCompanies, 'handle'> {
-  method = 'post';
+export class GetCompaniesHttpRoute extends HttpRoute<{ limit: number }, { name: string }[]> {
+  method = 'get';
   route = '/companies';
-  handler = handler(GetCompanies, 'handle');
 
   prepare(ctx: Context): { limit: number } {
     return {
