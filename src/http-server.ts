@@ -2,12 +2,14 @@ import Koa, { Middleware } from 'koa';
 import Router from 'koa-tree-router';
 import { HttpRoute } from './http-route';
 import bodyParser from 'koa-bodyparser';
+import { Server } from 'http';
 
 type HttpRouteHandler<I, O> = (arg: I) => O | Promise<O>;
 type HttpRoutePair<I, O> = { route: HttpRoute<I, O>; handler: HttpRouteHandler<I, O> };
 
 export class HttpServer {
   protected routes: HttpRoutePair<any, any>[] = [];
+  protected server: Server | undefined;
 
   use<I, O>(route: HttpRoute<I, O>, handler: HttpRouteHandler<I, O>): HttpServer {
     this.routes.push({ route, handler });
@@ -24,7 +26,15 @@ export class HttpServer {
     app.use(bodyParser());
     app.use(router.routes());
 
-    return new Promise((resolve) => app.listen(port, resolve as () => void));
+    return new Promise((resolve) => {
+      this.server = app.listen(port, resolve as () => void);
+    });
+  }
+
+  async shutdown(): Promise<undefined> {
+    return new Promise((resolve, reject) => {
+      this.server?.close((error) => (error ? reject(error) : resolve(undefined)));
+    });
   }
 
   buildHandler<I, O>(route: HttpRoute<I, O>, handler: HttpRouteHandler<I, O>): Middleware {

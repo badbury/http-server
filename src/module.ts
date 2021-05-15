@@ -1,4 +1,4 @@
-import { bind, Definition, on, RegisterDefinitions, ServiceLocator } from '../../ioc/src';
+import { bind, Definition, on, RegisterDefinitions, ServiceLocator, Shutdown } from '../../ioc/src';
 import { HttpRoute } from './http-route';
 import { HttpServer } from './http-server';
 
@@ -129,6 +129,9 @@ export class HttpModule {
       on(StartHttpServer)
         .use(HttpServer)
         .do((options, server) => server.serve(options.port)),
+      on(Shutdown)
+        .use(HttpServer)
+        .do((shutdown, server) => server.shutdown()),
     ];
   }
 }
