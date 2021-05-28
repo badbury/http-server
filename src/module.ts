@@ -1,4 +1,5 @@
 import { bind, Definition, on, RegisterDefinitions, ServiceLocator, Shutdown } from '../../ioc/src';
+import { AbstractClass, AllInstanceType, Method, Newable } from '../../ioc/src/type-utils';
 import { HttpRoute } from './http-route';
 import { HttpServer } from './http-server';
 
@@ -12,33 +13,12 @@ export abstract class HttpRouteDefinition<I, O> implements Definition<HttpRouteD
   abstract register(resolver: ServiceLocator, server: HttpServer): void;
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-type AbstractClass<T = any> = Function & { prototype: T };
-type Constructor<T = any, P extends any[] = any[]> = new (...args: P) => T;
-
-type AllInstanceType<T extends AbstractClass[]> = {
-  [K in keyof T]: T[K] extends { prototype: infer V } ? V : never;
-};
-
 type MethodOf<
-  TClassType extends Constructor,
-  TSubject,
+  TClassType extends Newable,
+  TSubjectType,
   TExtrasType extends AbstractClass[],
-  TReturn = any,
-  TClass = InstanceType<TClassType>,
-  TExtras = AllInstanceType<TExtrasType>
-> = {
-  [TProperty in keyof TClass]: TClass[TProperty] extends (
-    arg: infer U,
-    ...extras: infer E
-  ) => TReturn
-    ? U extends TSubject
-      ? E extends TExtras
-        ? TProperty
-        : never
-      : never
-    : never;
-}[keyof TClass];
+  TReturnType
+> = Method<InstanceType<TClassType>, [TSubjectType, ...AllInstanceType<TExtrasType>], TReturnType>;
 
 type FunctionOf<
   TSubject,
@@ -48,18 +28,21 @@ type FunctionOf<
 > = (subject: TSubject, ...args: TExtras) => TReturn;
 
 export class HttpRouteDefinitionBuilder<I, O, A extends AbstractClass[] = []> {
-  constructor(public readonly route: { prototype: HttpRoute<I, O> }, public args: A = [] as any) {}
+  constructor(
+    public readonly route: { prototype: HttpRoute<I, O> },
+    public args: A = ([] as unknown) as A,
+  ) {}
 
   use<P extends AbstractClass[]>(...args: P): HttpRouteDefinitionBuilder<I, O, P> {
     return new HttpRouteDefinitionBuilder(this.route, args);
   }
 
   do(target: FunctionOf<I, A, O>): HttpRouteDefinition<I, O>;
-  do<C extends Constructor, M extends MethodOf<C, I, A, O>>(
+  do<C extends Newable, M extends MethodOf<C, I, A, O>>(
     target: C,
     method: M,
   ): HttpRouteDefinition<I, O>;
-  do<C extends Constructor, M extends MethodOf<C, I, A, O>>(
+  do<C extends Newable, M extends MethodOf<C, I, A, O>>(
     target: C | FunctionOf<I, A, O>,
     method?: M,
   ): HttpRouteDefinition<I, O> {
@@ -73,7 +56,7 @@ export class ClassHttpRouteDefinition<
   I,
   O,
   A extends AbstractClass[],
-  V extends Constructor,
+  V extends Newable,
   M extends MethodOf<V, I, A, O>
 > extends HttpRouteDefinition<I, O> {
   constructor(
