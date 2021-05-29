@@ -1,4 +1,4 @@
-import { Context } from 'koa';
+import { RouterContext as Context } from 'koa-tree-router';
 import { HttpRoute } from '../../src';
 
 export class GetCompaniesHttpRoute extends HttpRoute<{ limit: number }, { name: string }[]> {

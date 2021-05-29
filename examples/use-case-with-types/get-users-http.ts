@@ -1,4 +1,4 @@
-import { Context } from 'koa';
+import { RouterContext as Context } from 'koa-tree-router';
 import { HttpRouteFor } from '../../src';
 import { GetUsers, GetUsersRequest, GetUsersResponse } from './get-users';
 

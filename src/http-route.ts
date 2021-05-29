@@ -1,4 +1,4 @@
-import { Context } from 'koa';
+import { RouterContext as Context } from 'koa-tree-router';
 
 export interface HttpRoute<I, O> {
   present?(ctx: Context, response: O): void;

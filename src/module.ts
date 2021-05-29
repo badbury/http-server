@@ -1,5 +1,15 @@
-import { bind, Definition, on, RegisterDefinitions, ServiceLocator, Shutdown } from '../../ioc/src';
-import { AbstractClass, AllInstanceType, Method, Newable } from '../../ioc/src/type-utils';
+import {
+  bind,
+  Definition,
+  on,
+  RegisterDefinitions,
+  ServiceLocator,
+  Shutdown,
+  AbstractClass,
+  AllInstanceType,
+  Method,
+  Newable,
+} from '@badbury/ioc';
 import { HttpRoute } from './http-route';
 import { HttpServer } from './http-server';
 

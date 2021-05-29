@@ -1,4 +1,4 @@
-import { Context } from 'koa';
+import { RouterContext as Context } from 'koa-tree-router';
 import { HttpRoute, HttpServer } from '../src';
 import { GetCompanies } from './simple-use-case/get-companies';
 import { GetCompaniesHttpRoute } from './simple-use-case/get-companies-http';

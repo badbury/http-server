@@ -1,5 +1,5 @@
-import Koa, { Middleware } from 'koa';
-import Router from 'koa-tree-router';
+import Koa from 'koa';
+import Router, { Middleware } from 'koa-tree-router';
 import { HttpRoute } from './http-route';
 import bodyParser from 'koa-bodyparser';
 import { Server } from 'http';
