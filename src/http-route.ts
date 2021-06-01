@@ -12,6 +12,6 @@ export abstract class HttpRoute<I, O> {
 }
 
 export abstract class HttpRouteFor<
-  T extends { [X in P]: (...args: any[]) => unknown } = any,
-  P extends keyof T = any
+  T extends { [X in P]: (...args: never[]) => unknown },
+  P extends keyof T
 > extends HttpRoute<Parameters<T[P]>[0], ReturnType<T[P]>> {}

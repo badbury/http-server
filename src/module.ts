@@ -71,20 +71,14 @@ export class HttpModule {
   }
 }
 
-type HttpRouteInput<T extends new (...args: any[]) => any> = InstanceType<T> extends HttpRoute<
-  infer I,
-  unknown
->
-  ? I
-  : never;
-type HttpRouteOutput<T extends new (...args: any[]) => any> = InstanceType<T> extends HttpRoute<
-  unknown,
-  infer O
->
-  ? O
-  : never;
+type HttpRouteInput<
+  T extends new (...args: unknown[]) => unknown
+> = InstanceType<T> extends HttpRoute<infer I, unknown> ? I : never;
+type HttpRouteOutput<
+  T extends new (...args: unknown[]) => unknown
+> = InstanceType<T> extends HttpRoute<unknown, infer O> ? O : never;
 
-export function http<T extends new (...args: any[]) => HttpRoute<any, any>>(
+export function http<T extends new (...args: unknown[]) => HttpRoute<unknown, unknown>>(
   route: T,
 ): HttpRouteDefinitionBuilder<HttpRouteInput<T>, HttpRouteOutput<T>> {
   return new HttpRouteDefinitionBuilder(route);
