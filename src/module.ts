@@ -27,7 +27,7 @@ export class HttpRouteDefinition<I, O> implements Definition<HttpRouteDefinition
 
   register(resolver: ServiceLocator, sink: EventSink, server: HttpServer): void {
     const route = resolver.get(this.route);
-    server.use(route, (req: I) => this.callable.handle([req], resolver, sink));
+    server.use(route, (req: I) => this.callable.call([req], resolver, sink));
   }
 }
 
