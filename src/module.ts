@@ -4,14 +4,15 @@ import {
   on,
   RegisterDefinitions,
   ServiceLocator,
-  Shutdown,
   AbstractClass,
   callableSetter,
   Callable,
   EventSink,
+  Disconnect,
+  Connect,
 } from '@badbury/ioc';
 import { HttpRoute } from './http-route';
-import { HttpServer } from './http-server';
+import { HttpServer, HttpServerConfig } from './http-server';
 
 export class StartHttpServer {
   constructor(public readonly port: number) {}
@@ -52,6 +53,7 @@ export class HttpModule {
   register(): Definition[] {
     return [
       bind(HttpServer),
+      bind(HttpServerConfig),
       on(RegisterDefinitions)
         .use(HttpServer)
         .do((event, server) => {
@@ -61,12 +63,12 @@ export class HttpModule {
             }
           }
         }),
-      on(StartHttpServer)
+      on(Connect)
+        .use(HttpServer, HttpServerConfig)
+        .do((_, server, config) => server.connect(config)),
+      on(Disconnect)
         .use(HttpServer)
-        .do((options, server) => server.serve(options.port)),
-      on(Shutdown)
-        .use(HttpServer)
-        .do((shutdown, server) => server.shutdown()),
+        .do((shutdown, server) => server.disconnect()),
     ];
   }
 }
