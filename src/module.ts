@@ -8,15 +8,16 @@ import {
   callableSetter,
   Callable,
   EventSink,
-  Disconnect,
-  Connect,
+  Shutdown,
 } from '@badbury/ioc';
 import { HttpRoute } from './http-route';
 import { HttpServer, HttpServerConfig } from './http-server';
 
-export class StartHttpServer {
-  constructor(public readonly port: number) {}
-}
+export class StartHttpServer {}
+export class HttpServerStarted {}
+export class HttpServerStopped {}
+export class HttpServerStarting {}
+export class HttpServerStopping {}
 
 export class HttpRouteDefinition<I, O> implements Definition<HttpRouteDefinition<I, O>> {
   definition = HttpRouteDefinition;
@@ -63,12 +64,22 @@ export class HttpModule {
             }
           }
         }),
-      on(Connect)
+      on(StartHttpServer)
         .use(HttpServer, HttpServerConfig)
-        .do((_, server, config) => server.connect(config)),
-      on(Disconnect)
+        .do(async function* (_, server, config) {
+          yield new HttpServerStarting();
+          await server.connect(config);
+          yield new HttpServerStarted();
+        })
+        .emit(),
+      on(Shutdown)
         .use(HttpServer)
-        .do((shutdown, server) => server.disconnect()),
+        .do(async function* (shutdown, server) {
+          yield new HttpServerStopping();
+          await server.disconnect();
+          yield new HttpServerStopped();
+        })
+        .emit(),
     ];
   }
 }

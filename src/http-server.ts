@@ -18,6 +18,12 @@ export class HttpServerConfig implements ListenOptions {
   maxIpsCount?: number;
 }
 
+class UnknownError extends Error {
+  constructor(public error: unknown) {
+    super('Invalid type thrown');
+  }
+}
+
 export class HttpServer {
   protected routes: HttpRoutePair<any, any>[] = [];
   protected server: Server | undefined;
@@ -27,7 +33,7 @@ export class HttpServer {
     return this;
   }
 
-  async connect(config: HttpServerConfig): Promise<undefined> {
+  async connect(config: HttpServerConfig): Promise<void> {
     const app = new Koa(config);
     const router = new Router();
     for (const { route, handler } of this.routes) {
@@ -38,13 +44,15 @@ export class HttpServer {
     app.use(router.routes());
 
     return new Promise((resolve) => {
-      this.server = app.listen(config, resolve as () => void);
+      this.server = app.listen(config, () => {
+        resolve();
+      });
     });
   }
 
-  async disconnect(): Promise<undefined> {
+  async disconnect(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.server?.close((error) => (error ? reject(error) : resolve(undefined)));
+      this.server?.close((error) => (error ? reject(error) : resolve()));
     });
   }
 
@@ -58,15 +66,22 @@ export class HttpServer {
         }
         ctx.body = response;
       } catch (error) {
-        if (typeof error === 'string') {
-          error = new Error(error);
-        }
         if (route.error) {
-          return route.error(ctx, error);
+          return route.error(ctx, this.parseError(error));
         }
         ctx.status = 500;
         ctx.body = 'Something went wrong';
       }
     };
+  }
+
+  private parseError(error: unknown): Error {
+    if (typeof error === 'string') {
+      return new Error(error);
+    }
+    if (!(error instanceof Error)) {
+      return new UnknownError(error);
+    }
+    return error;
   }
 }
